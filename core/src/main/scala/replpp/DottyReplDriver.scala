@@ -242,8 +242,8 @@ class DottyReplDriver(settings: Array[String],
   protected def interpret(res: ParseResult, quiet: Boolean = false)(using state: State): State = {
     res match {
       case parsed: Parsed if parsed.trees.nonEmpty =>
+        System.err.println("编译开始:" + this.getClass.getSimpleName)
         compile(parsed, state, quiet)
-
       case SyntaxErrors(_, errs, _) =>
         displayErrors(errs)
         state
@@ -259,8 +259,9 @@ class DottyReplDriver(settings: Array[String],
     }
   }
 
-  /** Compile `parsed` trees and evolve `state` in accordance */
+  /** Compile `parsed` trees and evolve `state` in accordance. 编译“已解析”树 */
   private def compile(parsed: Parsed, istate: State, quiet: Boolean = false): State = {
+    System.err.println("编译“已解析”树," + this.getClass.getSimpleName)
     def extractNewestWrapper(tree: untpd.Tree): Name = tree match {
       case PackageDef(_, (obj: untpd.ModuleDef) :: Nil) => obj.name.moduleClassName
       case _ => nme.NO_NAME
@@ -308,15 +309,18 @@ class DottyReplDriver(settings: Array[String],
               // output is printed in the order it was put in. warnings should be
               // shown before infos (eg. typedefs) for the same line. column
               // ordering is mostly to make tests deterministic
+              System.err.println("ttttt1")
               given Ordering[Diagnostic] =
                 Ordering[(Int, Int, Int)].on(d => (d.pos.line, -d.level, d.pos.column))
-
+              System.err.println("ttttt2")
               if (!quiet) {
+                System.err.println("ttttt3")
                 (definitions ++ warnings)
                   .sorted
                   .foreach(printDiagnostic)
               }
 
+              System.err.println("编译完成")
               updatedState
             }
         }
@@ -324,6 +328,7 @@ class DottyReplDriver(settings: Array[String],
   }
 
   private def renderDefinitions(tree: tpd.Tree, newestWrapper: Name)(using state: State): (State, Seq[Diagnostic]) = {
+    System.err.println("renderDefinitions.start,类名:" + this.getClass.getName)
     given Context = state.context
 
     def resAndUnit(denot: Denotation) = {
@@ -404,9 +409,11 @@ class DottyReplDriver(settings: Array[String],
             if newState.invalidObjectIndexes.contains(state.objectIndex) then Seq.empty
             else typeDefs(wrapperModule.symbol)
           val highlighted = (formattedTypeDefs ++ formattedMembers).map(d => new Diagnostic(d.msg, d.pos, d.level))
+          System.err.println("renderDefinitions.end.1,类名:" + this.getClass.getName)
           (newState, highlighted)
         }
         .getOrElse {
+          System.err.println("renderDefinitions.end.2,类名:" + this.getClass.getName)
           // user defined a trait/class/object, so no module needed
           (state, Seq.empty)
         }
@@ -512,7 +519,13 @@ class DottyReplDriver(settings: Array[String],
 
   /** Print warnings & errors using ReplConsoleReporter, and info straight to out */
   private def printDiagnostic(dia: Diagnostic)(using state: State) = dia.level match
-    case interfaces.Diagnostic.INFO => out.println(dia.msg) // print REPL's special info diagnostics directly to out
+    case interfaces.Diagnostic.INFO => {
+      // print REPL's special info diagnostics directly to out. 将REPL的特殊信息诊断直接打印出来。
+      System.err.println("将REPL的特殊信息诊断直接打印出来。" + out.getClass.getName)
+      out.println(dia.msg)
+      System.err.println(dia.msg.getClass.getName)
+      System.err.println("将REPL的特殊信息诊断直接打印完成。" + dia.getClass.getName)
+    }
     case _                          => ReplConsoleReporter.doReport(dia)(using state.context)
 
 end DottyReplDriver

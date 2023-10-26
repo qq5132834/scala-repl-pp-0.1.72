@@ -91,7 +91,10 @@ class JLineTerminal extends java.io.Closeable {
       .option(DISABLE_EVENT_EXPANSION, true)    // don't process escape sequences in input
       .build()
 
-    lineReader.readLine(prompt)
+    //这里中断等待行数据输入
+    val oneline = lineReader.readLine(prompt)
+    System.err.println("输入数据是:" + oneline)
+    oneline
   }
 
   def close(): Unit = terminal.close()

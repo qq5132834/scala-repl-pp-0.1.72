@@ -30,6 +30,7 @@ abstract class ReplDriverBase(args: Array[String],
   extends DottyReplDriver(args, out, maxHeight, classLoader) {
 
   protected def interpretInput(lines: IterableOnce[String], state: State, currentFile: Path): State = {
+    System.err.println("解析输入")
     val parsedLines = Seq.newBuilder[String]
     var currentState = state
 
