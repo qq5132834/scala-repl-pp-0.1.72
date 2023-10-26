@@ -1,0 +1,26 @@
+name: bootstrap
+
+on:
+  workflow_dispatch: # only manually trigger this workflow
+    inputs:
+      version:
+        description: 'version (git tag without the `v` prefix)'
+        required: true
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: coursier/setup-action@v1
+        with:
+          jvm: temurin:19
+      - name: cs bootstrap
+        run: cs bootstrap com.michaelpollmeier::scala-repl-pp:${{ inputs.version }} -o srp
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ inputs.version }}
+          tag_name: ${{ inputs.version }}
+          files: srp
+          fail_on_unmatched_files: true
