@@ -4,8 +4,10 @@ import dotty.tools.dotc.core.Contexts
 import dotty.tools.dotc.core.Contexts.Context
 import dotty.tools.repl.*
 import org.jline.reader.*
+import replpp.rmi.RMIServiceImpl
 
 import java.io.PrintStream
+import java.rmi.Naming
 import scala.annotation.tailrec
 import scala.jdk.CollectionConverters.*
 import scala.util.{Failure, Success, Try}
@@ -47,6 +49,18 @@ class ReplDriver(args: Array[String],
         case Failure(exception) =>
           throw exception
       }
+    }
+
+    try {
+      val rmiService:replpp.rmi.RMIService = new RMIServiceImpl
+      java.rmi.registry.LocateRegistry.createRegistry(1010)
+      // 将远程对象注册到 RMI 注册服务器上，并命名为 Hello
+      java.rmi.Naming.bind("rmi://127.0.0.1:1010/hello", rmiService)
+      System.err.println("RMI服务器启动成功！")
+    } catch {
+      case e: Exception =>
+        System.err.println(e.getClass.getName)
+        e.printStackTrace()
     }
 
     try runBody {
