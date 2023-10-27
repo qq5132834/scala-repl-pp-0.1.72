@@ -50,6 +50,7 @@ class ReplDriver(args: Array[String],
     }
 
     try runBody {
+      System.err.println("开始执行循环................")
       loop(using initialState)()
     }
     finally terminal.close()
