@@ -344,8 +344,12 @@ class DottyReplDriver(settings: Array[String],
       name.startsWith(str.REPL_RES_PREFIX) && hasValidNumber && sym.info == defn.UnitType
     }
 
+    /***
+     * @param symbol
+     * @return 在计算机科学领域，"diagnostic" 可以指系统或程序用于检测和报告错误、问题或异常状态的工具和方法。
+     */
     def extractAndFormatMembers(symbol: Symbol): (State, Seq[Diagnostic]) = if (tree.symbol.info.exists) {
-      val info = symbol.info
+      val info = symbol.info //符号信息
       val defs =
         info.bounds.hi.finalResultType
           .membersBasedOnFlags(required = Method, excluded = Accessor | ParamAccessor | Synthetic | Private)
