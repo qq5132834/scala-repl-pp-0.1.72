@@ -345,59 +345,62 @@ class DottyReplDriver(settings: Array[String],
     }
 
     /***
+     * 提取和格式化成员
      * @param symbol
      * @return 在计算机科学领域，"diagnostic" 可以指系统或程序用于检测和报告错误、问题或异常状态的工具和方法。
      */
-    def extractAndFormatMembers(symbol: Symbol): (State, Seq[Diagnostic]) = if (tree.symbol.info.exists) {
-      val info = symbol.info //符号信息
-      val defs =
-        info.bounds.hi.finalResultType
-          .membersBasedOnFlags(required = Method, excluded = Accessor | ParamAccessor | Synthetic | Private)
-          .filterNot { denot =>
-            defn.topClasses.contains(denot.symbol.owner) || denot.symbol.isConstructor
-             || denot.symbol.name.is(DefaultGetterName)
-          }
+    def extractAndFormatMembers(symbol: Symbol): (State, Seq[Diagnostic]) = {
+      if (tree.symbol.info.exists) {
+        val info = symbol.info //符号信息
+        val defs =
+          info.bounds.hi.finalResultType
+            .membersBasedOnFlags(required = Method, excluded = Accessor | ParamAccessor | Synthetic | Private)
+            .filterNot { denot =>
+              defn.topClasses.contains(denot.symbol.owner) || denot.symbol.isConstructor
+                || denot.symbol.name.is(DefaultGetterName)
+            }
 
-      val vals =
-        info.fields
-          .filterNot(_.symbol.isOneOf(ParamAccessor | Private | Synthetic | Artifact | Module))
-          .filter(_.symbol.name.is(SimpleNameKind))
+        val vals =
+          info.fields
+            .filterNot(_.symbol.isOneOf(ParamAccessor | Private | Synthetic | Artifact | Module))
+            .filter(_.symbol.name.is(SimpleNameKind))
 
-      val typeAliases =
-        info.bounds.hi.typeMembers.filter(_.symbol.info.isTypeAlias)
+        val typeAliases =
+          info.bounds.hi.typeMembers.filter(_.symbol.info.isTypeAlias)
 
-      // The wrapper object may fail to initialize if the rhs of a ValDef throws.
-      // In that case, don't attempt to render any subsequent vals, and mark this
-      // wrapper object index as invalid.
-      var failedInit = false
-      val renderedVals =
-        val buf = mutable.ListBuffer[Diagnostic]()
-        for d <- vals do if !failedInit then rendering.renderVal(d)
-        match
-          case Right(Some(v)) => {
-            buf += v
-          }
-          case Left(e) => {
-            buf += rendering.renderError(e, d)
-            failedInit = true
-          }
-          case _ =>{}
-        buf.toList
+        // The wrapper object may fail to initialize if the rhs of a ValDef throws.
+        // In that case, don't attempt to render any subsequent vals, and mark this
+        // wrapper object index as invalid.
+        var failedInit = false
+        val renderedVals =
+          val buf = mutable.ListBuffer[Diagnostic]()
+          for d <- vals do if !failedInit then rendering.renderVal(d)
+          match
+            case Right(Some(v)) => {
+              buf += v
+            }
+            case Left(e) => {
+              buf += rendering.renderError(e, d)
+              failedInit = true
+            }
+            case _ => {}
+          buf.toList
 
-      if failedInit then
+        if failedInit then
         // We limit the returned diagnostics here to `renderedVals`, which will contain the rendered error
         // for the val which failed to initialize. Since any other defs, aliases, imports, etc. from this
         // input line will be inaccessible, we avoid rendering those so as not to confuse the user.
-        (state.copy(invalidObjectIndexes = state.invalidObjectIndexes + state.objectIndex), renderedVals)
-      else
-        val formattedMembers =
-          typeAliases.map(rendering.renderTypeAlias)
-          ++ defs.map(rendering.renderMethod)
-          ++ renderedVals
-        val diagnostics = if formattedMembers.isEmpty then rendering.forceModule(symbol) else formattedMembers
-        (state.copy(valIndex = state.valIndex - vals.count(resAndUnit)), diagnostics)
+          (state.copy(invalidObjectIndexes = state.invalidObjectIndexes + state.objectIndex), renderedVals)
+        else
+          val formattedMembers =
+            typeAliases.map(rendering.renderTypeAlias)
+              ++ defs.map(rendering.renderMethod)
+              ++ renderedVals
+          val diagnostics = if formattedMembers.isEmpty then rendering.forceModule(symbol) else formattedMembers
+          (state.copy(valIndex = state.valIndex - vals.count(resAndUnit)), diagnostics)
+      }
+      else (state, Seq.empty)
     }
-    else (state, Seq.empty)
 
     def isSyntheticCompanion(sym: Symbol) =
       sym.is(Module) && sym.is(Synthetic)
@@ -409,7 +412,7 @@ class DottyReplDriver(settings: Array[String],
       }
 
     atPhase(typerPhase.next) {
-      // Display members of wrapped module:
+      // Display members of wrapped module:（显示包装模块的成员：）
       tree.symbol.info.memberClasses
         .find(_.symbol.name == newestWrapper.moduleClassName)
         .map { wrapperModule =>

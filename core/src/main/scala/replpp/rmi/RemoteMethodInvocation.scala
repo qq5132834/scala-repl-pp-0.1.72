@@ -49,10 +49,22 @@ object RemoteMethodInvocation {
       throw new AssertionError(s"compilation error for predef code - error should have been reported above ^") with NoStackTrace
     }
 
-//    rmiDriver.run("val a = 1")(using state)
+//    rmiDriver.run("val a = 1 \n val b = 2 \n println(a+b) \n println(\"hello,run\")")(using state)
+//    rmiDriver.runQuietly("val a = 1 \n val b = 2 \n println(a+b) \n println(\"hello,runQuietly\") ")(using state)
 
-    //运行直到退出（获取ctrl+c或quit命令）
-    rmiDriver.runUntilQuit(using state)()
+
+    try {
+      val rmiService: replpp.rmi.RMIService = new RMIServiceImpl(config)
+      java.rmi.registry.LocateRegistry.createRegistry(1010)
+      // 将远程对象注册到 RMI 注册服务器上，并命名为 Hello
+      java.rmi.Naming.bind("rmi://127.0.0.1:1010/hello", rmiService)
+      System.err.println("RMI服务器启动成功！")
+    } catch {
+      case e: Exception =>
+        System.err.println(e.getClass.getName)
+        e.printStackTrace()
+    }
+
   }
 
 }

@@ -52,17 +52,17 @@ class RMIDriver(args: Array[String],
       }
     }
 
-    try {
-      val rmiService:replpp.rmi.RMIService = new RMIServiceImpl
-      java.rmi.registry.LocateRegistry.createRegistry(1010)
-      // 将远程对象注册到 RMI 注册服务器上，并命名为 Hello
-      java.rmi.Naming.bind("rmi://127.0.0.1:1010/hello", rmiService)
-      System.err.println("RMI服务器启动成功！")
-    } catch {
-      case e: Exception =>
-        System.err.println(e.getClass.getName)
-        e.printStackTrace()
-    }
+//    try {
+//      val rmiService:replpp.rmi.RMIService = new RMIServiceImpl()
+//      java.rmi.registry.LocateRegistry.createRegistry(1010)
+//      // 将远程对象注册到 RMI 注册服务器上，并命名为 Hello
+//      java.rmi.Naming.bind("rmi://127.0.0.1:1010/hello", rmiService)
+//      System.err.println("RMI服务器启动成功！")
+//    } catch {
+//      case e: Exception =>
+//        System.err.println(e.getClass.getName)
+//        e.printStackTrace()
+//    }
 
     try runBody {
       System.err.println("开始执行循环................")
