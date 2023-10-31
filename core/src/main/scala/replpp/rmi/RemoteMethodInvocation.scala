@@ -49,7 +49,7 @@ object RemoteMethodInvocation {
       throw new AssertionError(s"compilation error for predef code - error should have been reported above ^") with NoStackTrace
     }
 
-//    rmiDriver.run("val a = 1 \n val b = 2 \n println(a+b) \n println(\"hello,run\")")(using state)
+//    rmiDriver.run("val a = 1 \n val b = 2 \n println(a+b) \n println(\"hello,run\") \n ")(using state)
 //    rmiDriver.runQuietly("val a = 1 \n val b = 2 \n println(a+b) \n println(\"hello,runQuietly\") ")(using state)
 
 

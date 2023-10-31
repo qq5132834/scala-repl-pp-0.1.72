@@ -19,13 +19,12 @@ import dotty.tools.dotc.core.NameOps.*
 import dotty.tools.dotc.core.Names.Name
 import dotty.tools.dotc.core.StdNames.*
 import dotty.tools.dotc.core.Symbols.{Symbol, defn}
-import dotty.tools.dotc.interfaces
+import dotty.tools.dotc.{CompilationUnit, Driver, interfaces}
 import dotty.tools.dotc.interactive.Completion
 import dotty.tools.dotc.printing.SyntaxHighlighting
 import dotty.tools.dotc.reporting.{ConsoleReporter, Diagnostic, StoreReporter, UniqueMessagePositions}
 import dotty.tools.dotc.util.Spans.Span
 import dotty.tools.dotc.util.{SourceFile, SourcePosition}
-import dotty.tools.dotc.{CompilationUnit, Driver}
 import dotty.tools.dotc.config.CompilerCommand
 import dotty.tools.io.*
 import dotty.tools.repl.*
@@ -150,7 +149,7 @@ class DottyReplDriver(settings: Array[String],
   }
 
   final def run(input: String)(using state: State): State = runBody {
-    //运行完成后退出（不会关注上下文信息，类似sql，不是存储过程）
+    //调用解释器，运行完成后退出（不会关注上下文信息，类似sql，不是存储过程）
     interpret(ParseResult.complete(input))
   }
 
@@ -315,6 +314,7 @@ class DottyReplDriver(settings: Array[String],
               given Ordering[Diagnostic] =
                 Ordering[(Int, Int, Int)].on(d => (d.pos.line, -d.level, d.pos.column))
               System.err.println("ttttt2")
+              System.err.println("runQuietly运行命令？" + quiet)
               if (!quiet) {
                 System.err.println("ttttt3")
                 (definitions ++ warnings)
@@ -523,7 +523,7 @@ class DottyReplDriver(settings: Array[String],
       throw new EndOfFileException()
   }
 
-  /** shows all errors nicely formatted */
+  /** shows all errors nicely formatted. 显示格式良好的所有错误。 */
   private def displayErrors(errs: Seq[Diagnostic])(using state: State): State = {
     errs.foreach(printDiagnostic)
     state
@@ -539,15 +539,24 @@ class DottyReplDriver(settings: Array[String],
     override def flush()(using Context): Unit    = out.flush()
   }
 
-  /** Print warnings & errors using ReplConsoleReporter, and info straight to out */
-  private def printDiagnostic(dia: Diagnostic)(using state: State) = dia.level match
-    case interfaces.Diagnostic.INFO => {
-      // print REPL's special info diagnostics directly to out. 将REPL的特殊信息诊断直接打印出来。
-      System.err.println("将REPL的特殊信息诊断直接打印出来。" + out.getClass.getName)
-      out.println(dia.msg)
-      System.err.println(dia.msg.getClass.getName)
-      System.err.println("将REPL的特殊信息诊断直接打印完成。" + dia.getClass.getName)
-    }
-    case _                          => ReplConsoleReporter.doReport(dia)(using state.context)
-
+  /** Print warnings & errors using ReplConsoleReporter, and info straight to out. 使用ReplConsoleReporter打印警告和错误，并直接打印信息。 */
+  private def printDiagnostic(dia: Diagnostic)(using state: State) = {
+    dia.level match
+      case interfaces.Diagnostic.INFO => {
+        // print REPL's special info diagnostics directly to out. 将REPL的特殊信息诊断直接打印出来。
+        System.err.println("将REPL的特殊信息诊断直接打印出来。" + out.getClass.getName)
+        out.println(dia.msg)
+        System.err.println(dia.msg.getClass.getName)
+        System.err.println("将REPL的特殊信息诊断直接打印完成。" + dia.getClass.getName)
+      }
+      case interfaces.Diagnostic.ERROR => {
+        System.err.println("打印错误码")
+        out.println(dia.msg)
+      }
+      case interfaces.Diagnostic.WARNING => {
+        System.err.println("打印警告码")
+        out.println(dia.msg)
+      }
+      case _ => ReplConsoleReporter.doReport(dia)(using state.context)
+  }
 end DottyReplDriver
