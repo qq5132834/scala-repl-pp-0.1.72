@@ -150,10 +150,12 @@ class DottyReplDriver(settings: Array[String],
   }
 
   final def run(input: String)(using state: State): State = runBody {
+    //运行完成后退出（不会关注上下文信息，类似sql，不是存储过程）
     interpret(ParseResult.complete(input))
   }
 
   final def runQuietly(input: String)(using State): State = runBody {
+    //运行输入但不退出，（不会关注上下文信息，类似sql，不是存储过程）
     val parsed = ParseResult(input)
     interpret(parsed, quiet = true)
   }
@@ -165,14 +167,14 @@ class DottyReplDriver(settings: Array[String],
 
   /**
    * Controls whether the `System.out` and `System.err` streams are set to the provided constructor parameter instance
-   * of [[java.io.PrintStream]] during the execution of the repl. On by default.
+   * of [[java.io.PrintStream]] during the execution of the repl. On by default. 控制在执行repl期间是否将“System.out”和“System.err”流设置为提供的[[java.io.PrintStream]]的构造函数参数实例。默认情况下启用。
    *
    * Disabling this can be beneficial when executing a repl instance inside a concurrent environment, for example a
-   * thread pool (such as the Scala compile server in the Scala Plugin for IntelliJ IDEA).
+   * thread pool (such as the Scala compile server in the Scala Plugin for IntelliJ IDEA). 当在并发环境中执行repl实例时，禁用它可能是有益的，例如线程池（例如IntelliJ IDEA的Scala插件中的Scala编译服务器）。
    *
    * In such environments, indepently executing `System.setOut` and `System.setErr` without any synchronization can
    * lead to unpredictable results when restoring the original streams (dependent on the order of execution), leaving
-   * the Java process in an inconsistent state.
+   * the Java process in an inconsistent state. 在这样的环境中，在没有任何同步的情况下独立执行“System.setOut”和“System.setErr”可能会在恢复原始流时导致不可预测的结果（取决于执行顺序），使Java进程处于不一致的状态。
    */
   protected def redirectOutput: Boolean = true
 
@@ -366,13 +368,16 @@ class DottyReplDriver(settings: Array[String],
       var failedInit = false
       val renderedVals =
         val buf = mutable.ListBuffer[Diagnostic]()
-        for d <- vals do if !failedInit then rendering.renderVal(d) match
-          case Right(Some(v)) =>
+        for d <- vals do if !failedInit then rendering.renderVal(d)
+        match
+          case Right(Some(v)) => {
             buf += v
-          case Left(e) =>
+          }
+          case Left(e) => {
             buf += rendering.renderError(e, d)
             failedInit = true
-          case _ =>
+          }
+          case _ =>{}
         buf.toList
 
       if failedInit then
@@ -404,12 +409,20 @@ class DottyReplDriver(settings: Array[String],
       tree.symbol.info.memberClasses
         .find(_.symbol.name == newestWrapper.moduleClassName)
         .map { wrapperModule =>
+          System.err.println("renderDefinitions.end.0,类名:" + this.getClass.getName)
+          //提取和格式化成员
           val (newState, formattedMembers) = extractAndFormatMembers(wrapperModule.symbol)
-          val formattedTypeDefs =  // don't render type defs if wrapper initialization failed
-            if newState.invalidObjectIndexes.contains(state.objectIndex) then Seq.empty
-            else typeDefs(wrapperModule.symbol)
-          val highlighted = (formattedTypeDefs ++ formattedMembers).map(d => new Diagnostic(d.msg, d.pos, d.level))
           System.err.println("renderDefinitions.end.1,类名:" + this.getClass.getName)
+          //don't render type defs if wrapper initialization failed. 如果包装初始化失败，则不呈现类型defs。
+          val formattedTypeDefs = {
+            var st = newState.invalidObjectIndexes.contains(state.objectIndex)
+            if st
+            then
+              Seq.empty
+            else
+              typeDefs(wrapperModule.symbol)
+          }
+          val highlighted = (formattedTypeDefs ++ formattedMembers).map(d => new Diagnostic(d.msg, d.pos, d.level))
           (newState, highlighted)
         }
         .getOrElse {
@@ -513,7 +526,9 @@ class DottyReplDriver(settings: Array[String],
    *  and using a PrintStream rather than a PrintWriter so messages aren't re-encoded. */
   private object ReplConsoleReporter extends ConsoleReporter.AbstractConsoleReporter {
     override def posFileStr(pos: SourcePosition) = "" // omit file paths
-    override def printMessage(msg: String): Unit = out.println(msg)
+    override def printMessage(msg: String): Unit = {
+      out.println(msg)
+    }
     override def flush()(using Context): Unit    = out.flush()
   }
 
