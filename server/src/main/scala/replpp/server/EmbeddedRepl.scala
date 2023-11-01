@@ -15,6 +15,8 @@ import scala.concurrent.impl.Promise
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.util.{Failure, Success}
 
+import replpp.CompileInterpretResult
+
 class EmbeddedRepl(predefLines: IterableOnce[String] = Seq.empty) {
   private val logger: Logger = LoggerFactory.getLogger(getClass)
 
@@ -29,7 +31,8 @@ class EmbeddedRepl(predefLines: IterableOnce[String] = Seq.empty) {
       "-deprecation",
       "-color", "never"
     )
-    new ReplDriver(compilerArgs, new PrintStream(replOutputStream), classLoader = None)
+    val phaseResult = CompileInterpretResult()
+    new ReplDriver(compilerArgs, new PrintStream(replOutputStream), classLoader = None, phaseResult)
   }
 
   private var state: State = {
@@ -83,8 +86,8 @@ class EmbeddedRepl(predefLines: IterableOnce[String] = Seq.empty) {
   }
 }
 
-class ReplDriver(args: Array[String], out: PrintStream, classLoader: Option[ClassLoader])
-  extends ReplDriverBase(args, out, maxHeight = None, classLoader)(using BlackWhite) {
+class ReplDriver(args: Array[String], out: PrintStream, classLoader: Option[ClassLoader], phaseResult: CompileInterpretResult)
+  extends ReplDriverBase(args, out, maxHeight = None, classLoader, phaseResult)(using BlackWhite) {
   def execute(inputLines: IterableOnce[String])(using state: State = initialState): State =
     interpretInput(inputLines, state, pwd)
 }

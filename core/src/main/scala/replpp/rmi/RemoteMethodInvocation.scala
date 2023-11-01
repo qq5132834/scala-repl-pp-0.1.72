@@ -8,6 +8,8 @@ import replpp.{Config, ReplDriver, allPredefCode, verboseEnabled}
 import java.lang.System.lineSeparator
 import scala.util.control.NoStackTrace
 
+import replpp.CompileInterpretResult
+
 /***
  * RMI植入
  */
@@ -22,13 +24,16 @@ object RemoteMethodInvocation {
 
     val predefCode = allPredefCode(config) //预定义代码
     val compilerArgs = replpp.compilerArgs(config)
+    val result = CompileInterpretResult()
     import config.colors
     val rmiDriver = new RMIDriver(
       compilerArgs,
       onExitCode = config.onExitCode,
       greeting = config.greeting,
       prompt = config.prompt.getOrElse("scala"),
-      maxHeight = config.maxHeight
+      maxHeight = config.maxHeight,
+      None,
+      result
     )
 
     val initialState: State = rmiDriver.initialState

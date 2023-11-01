@@ -7,18 +7,23 @@ import dotty.tools.repl.State
 import java.lang.System.lineSeparator
 import scala.util.control.NoStackTrace
 
+import replpp.CompileInterpretResult
+
 object InteractiveShell {
   def run(config: Config): Unit = {
 
     val predefCode = allPredefCode(config)
     val compilerArgs = replpp.compilerArgs(config)
+    val result = CompileInterpretResult()
     import config.colors
     val replDriver = new ReplDriver(
       compilerArgs,
       onExitCode = config.onExitCode,
       greeting = config.greeting,
       prompt = config.prompt.getOrElse("scala"),
-      maxHeight = config.maxHeight
+      maxHeight = config.maxHeight,
+      None,
+      result
     )
 
     val initialState: State = replDriver.initialState
