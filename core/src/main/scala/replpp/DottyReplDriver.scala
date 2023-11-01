@@ -39,13 +39,16 @@ import scala.language.implicitConversions
 import scala.util.control.NonFatal
 import scala.util.Using
 
+import replpp.CompileInterpretResult
+
 /** Based on https://github.com/lampepfl/dotty/blob/3.3.0-RC5/compiler/src/dotty/tools/repl/ReplDriver.scala
  * Main REPL instance, orchestrating input, compilation and presentation
  * */
 class DottyReplDriver(settings: Array[String],
                       out: PrintStream,
                       maxHeight: Option[Int],
-                      classLoader: Option[ClassLoader])(using Colors) extends Driver:
+                      classLoader: Option[ClassLoader],
+                      result: CompileInterpretResult)(using Colors) extends Driver:
 
   /** Overridden to `false` in order to not have to give sources on the
    *  commandline
@@ -546,6 +549,7 @@ class DottyReplDriver(settings: Array[String],
         // print REPL's special info diagnostics directly to out. 将REPL的特殊信息诊断直接打印出来。
         System.err.println("将REPL的特殊信息诊断直接打印出来。" + out.getClass.getName)
         out.println(dia.msg)
+        this.result.setResult(String.valueOf(dia.msg))
         System.err.println(dia.msg.getClass.getName)
         System.err.println("将REPL的特殊信息诊断直接打印完成。" + dia.getClass.getName)
       }
