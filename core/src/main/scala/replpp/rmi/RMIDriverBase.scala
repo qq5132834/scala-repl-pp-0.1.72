@@ -12,7 +12,7 @@ import dotty.tools.io.{AbstractFile, ClassPath, ClassRepresentation}
 import dotty.tools.repl.*
 import org.jline.reader.*
 import replpp.shaded.fansi
-import replpp.{Colors, DottyReplDriver, UsingDirectives, resolveFile, util}
+import replpp.{Colors, DottyReplDriver, CompileInterpretResult, UsingDirectives, resolveFile, util}
 
 import java.io.PrintStream
 import java.lang.System.lineSeparator
@@ -27,8 +27,10 @@ import scala.util.{Failure, Success, Try}
 abstract class RMIDriverBase(args: Array[String],
                              out: PrintStream,
                              maxHeight: Option[Int],
-                             classLoader: Option[ClassLoader])(using Colors)
-  extends DottyReplDriver(args, out, maxHeight, classLoader) {
+                             classLoader: Option[ClassLoader],
+                             result: CompileInterpretResult
+                            )(using Colors)
+  extends DottyReplDriver(args, out, maxHeight, classLoader, result) {
 
   protected def interpretInput(lines: IterableOnce[String], state: State, currentFile: Path): State = {
     System.err.println("解析输入")

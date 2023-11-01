@@ -23,11 +23,14 @@ import scala.collection.mutable
 import scala.jdk.CollectionConverters.*
 import scala.util.{Failure, Success, Try}
 
+import replpp.CompileInterpretResult
+
 abstract class ReplDriverBase(args: Array[String],
                               out: PrintStream,
                               maxHeight: Option[Int],
-                              classLoader: Option[ClassLoader])(using Colors)
-  extends DottyReplDriver(args, out, maxHeight, classLoader) {
+                              classLoader: Option[ClassLoader],
+                              phaseResult: CompileInterpretResult)(using Colors)
+  extends DottyReplDriver(args, out, maxHeight, classLoader, phaseResult) {
 
   protected def interpretInput(lines: IterableOnce[String], state: State, currentFile: Path): State = {
     System.err.println("解析输入")
