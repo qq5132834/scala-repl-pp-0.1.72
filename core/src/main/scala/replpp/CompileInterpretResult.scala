@@ -8,6 +8,9 @@ class CompileInterpretResult {
   private var result = ""
 
   def getResult(): String = this.result
-  def setResult(str: String): Unit = this.result = str
+
+  def setResult(str: String): Unit = {
+    this.result = this.result + str + "\n"
+  }
 
 }
