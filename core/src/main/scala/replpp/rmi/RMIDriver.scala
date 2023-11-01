@@ -13,14 +13,17 @@ import scala.annotation.tailrec
 import scala.jdk.CollectionConverters.*
 import scala.util.{Failure, Success, Try}
 
+import replpp.CompileInterpretResult
+
 class RMIDriver(args: Array[String],
                 out: PrintStream = scala.Console.out,
                 onExitCode: Option[String] = None,
                 greeting: Option[String],
                 prompt: String,
                 maxHeight: Option[Int] = None,
-                classLoader: Option[ClassLoader] = None)(using Colors)
-  extends RMIDriverBase(args, out, maxHeight, classLoader) {
+                classLoader: Option[ClassLoader] = None,
+                result: CompileInterpretResult)(using Colors)
+  extends RMIDriverBase(args, out, maxHeight, classLoader, result) {
 
   /** Run REPL with `state` until `:quit` command found. 使用“state”运行REPL，直到找到“：quit”命令为止。
     * Main difference to the 'original': different greeting, trap Ctrl-c. 与“原始”的主要区别：不同的问候语、捕获Ctrl-c。
