@@ -8,7 +8,7 @@ import replpp.shaded.scopt.OParserBuilder
 import java.nio.file.Path
 
 case class Config(
-  predefFiles: Seq[Path] = Nil,
+  var predefFiles: Seq[Path] = Nil,
   nocolors: Boolean = false,
   verbose: Boolean = false,
   dependencies: Seq[String] = Seq.empty,
