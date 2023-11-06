@@ -35,23 +35,41 @@ class RMIServiceImpl(config: Config) extends UnicastRemoteObject
       phaseResult
     )
 
-    val initialState: State = rmiDriver.initialState
 
+    this.m1(predefCode, line) //方案2
+//    this.m2(rmiDriver, predefCode, line, phaseResult) //方案1，仿server方式
+
+  }
+
+  def m2(rmiDriver: RMIDriver, predefCode: String, line: String, phaseResult: CompileInterpretResult): String = {
+    //方案2：
+    val initialState: State = rmiDriver.initialState
     //处理预代码
     val state: State = rmiDriver.runQuietly(predefCode)(using initialState)
     if (predefCode.nonEmpty && state.objectIndex != 1) {
       throw new AssertionError(s"compilation error for predef code - error should have been reported above ^") with NoStackTrace
     }
 
-//    rmiDriver.run("val a = 1 \n val b = 2 \n println(a+b) \n println(\"hello,run\")")(using state)
-//    rmiDriver.runQuietly("val a = 1 \n val b = 2 \n println(a+b) \n println(\"hello,runQuietly\") ")(using state)
+    //    rmiDriver.run("val a = 1 \n val b = 2 \n println(a+b) \n println(\"hello,run\")")(using state)
+    //    rmiDriver.runQuietly("val a = 1 \n val b = 2 \n println(a+b) \n println(\"hello,runQuietly\") ")(using state)
 
     System.err.println("hello, RMI.start:" + line)
-//    rmiDriver.runQuietly(line)(using state)
+    //    rmiDriver.runQuietly(line)(using state)
     rmiDriver.run(line)(using state)
     System.err.println("hello, RMI.end")
 
     phaseResult.getResult()
+  }
+
+  def m1(predefCode: String, line: String):String = {
+    //方案1：仿server模
+    val rmiQueryResult = RmiRepl().query(predefCode + "\n" + line)
+    System.err.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>1<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+    System.out.println(rmiQueryResult.output)
+    System.err.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+    System.out.println(String.valueOf(rmiQueryResult))
+    System.err.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>3<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+    String.valueOf(rmiQueryResult)
   }
 
 }

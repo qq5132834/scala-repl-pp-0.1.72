@@ -1,9 +1,7 @@
 package replpp.rmi
 
 import dotty.tools.repl.State
-import org.slf4j.{Logger, LoggerFactory}
 import replpp.Colors.BlackWhite
-import replpp.server.HasUUID
 import replpp.{CompileInterpretResult, ReplDriverBase, pwd}
 
 import java.io.*
@@ -13,10 +11,9 @@ import java.util.concurrent.Executors
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
 
-case class RmiQueryResult(output: String, uuid: UUID, success: Boolean) extends HasUUID
+case class RmiQueryResult(output: String, success: Boolean)
 
-class EmbeddedRepl(predefLines: IterableOnce[String] = Seq.empty) {
-  private val logger: Logger = LoggerFactory.getLogger(getClass)
+class RmiRepl(predefLines: IterableOnce[String] = Seq.empty) {
 
   /** repl and compiler output ends up in this replOutputStream */
   private val replOutputStream = new ByteArrayOutputStream()
@@ -24,10 +21,12 @@ class EmbeddedRepl(predefLines: IterableOnce[String] = Seq.empty) {
   private val replDriver: ReplDriver = {
     val inheritedClasspath = System.getProperty("java.class.path")
     val compilerArgs = Array(
-      "-classpath", inheritedClasspath,
-      "-explain", // verbose scalac error messages
+      "-classpath",
+      inheritedClasspath,
+      "-explain", // verbose scalac error messages. 详细标量错误消息。
       "-deprecation",
-      "-color", "never"
+      "-color",
+      "never"
     )
     val phaseResult = CompileInterpretResult()
     new ReplDriver(compilerArgs, new PrintStream(replOutputStream), classLoader = None, phaseResult)
@@ -37,7 +36,7 @@ class EmbeddedRepl(predefLines: IterableOnce[String] = Seq.empty) {
     val state = replDriver.execute(predefLines)(using replDriver.initialState)
     val output = readAndResetReplOutputStream()
     if (output.nonEmpty)
-      logger.info(output)
+      System.out.println(output)
     state
   }
 
@@ -68,13 +67,13 @@ class EmbeddedRepl(predefLines: IterableOnce[String] = Seq.empty) {
   def query(inputLines: IterableOnce[String]): RmiQueryResult = {
     val (uuid, futureResult) = queryAsync(inputLines)
     val result = Await.result(futureResult, Duration.Inf)
-    RmiQueryResult(result, uuid, success = true)
+    RmiQueryResult(result, success = true)
   }
 
   /** Shutdown the embedded shell and associated threads.
     */
   def shutdown(): Unit = {
-    logger.info("shutting down")
+    System.out.println("shutting down")
     singleThreadedJobExecutor.shutdown()
   }
 }
